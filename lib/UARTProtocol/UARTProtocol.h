@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Enable or disable debugging
-#define DEBUG_LOGS 0
+#define DEBUG_LOGS 1
 
 #if DEBUG_LOGS
 #define DEBUG_PRINT(...) do { Serial.print(__VA_ARGS__); } while (0)
