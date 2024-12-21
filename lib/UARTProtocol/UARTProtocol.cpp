@@ -107,3 +107,25 @@ bool UARTProtocol::receivePacket(uint8_t& commandType, uint8_t* parameters, uint
     DEBUG_PRINTLN("Packet received successfully");
     return true;
 }
+
+
+bool UARTProtocol::waitForHeader(unsigned long timeout) {
+    DEBUG_PRINTLN("Waiting for header with timeout...");
+
+    unsigned long startTime = millis();  // Record the start time
+
+    while (millis() - startTime < timeout) {  // Check if timeout has been reached
+        if (serial.available() > 0) {  // Data available in the buffer
+            int nextByte = serial.peek();  // Peek at the next byte without removing it
+            if (nextByte == header) {      // Check if the byte matches the header
+                DEBUG_PRINTLN("Header byte found!");
+                return true;               // Exit without clearing the header byte
+            } else {
+                serial.read();  // Consume non-header byte
+            }
+        }
+    }
+
+    DEBUG_PRINTLN("Timeout: Header byte not found.");
+    return false;  // Timeout reached
+}

@@ -29,6 +29,8 @@ public:
     void begin();
     bool sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum = true);
     bool receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t& parameterCount, bool checkChecksum = true);
+    bool waitForHeader(unsigned long timeout);
+
 };
 
 #endif // UARTPROTOCOL_H
