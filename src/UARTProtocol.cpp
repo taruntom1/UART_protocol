@@ -121,6 +121,8 @@ bool UARTProtocol::waitForHeader(unsigned long timeout) {
     return false;  // Timeout reached
 }
 
+// Check if there is data available to read
 bool UARTProtocol::available() {
     return serial.available();
 }
+
