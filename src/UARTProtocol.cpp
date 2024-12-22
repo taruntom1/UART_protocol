@@ -1,7 +1,7 @@
 #include "UARTProtocol.h"
 
-UARTProtocol::UARTProtocol(HardwareSerial& serialPort, uint8_t headerByte, uint8_t maxPacketSize, unsigned long baudRate, uint8_t (*lookupTable)(uint8_t))
-    : serial(serialPort), header(headerByte), maxPacketSize(maxPacketSize), baudRate(baudRate), parameterLookup(lookupTable) {}
+UARTProtocol::UARTProtocol(HardwareSerial& serialPort, uint8_t headerByte, uint8_t maxPacketSize, unsigned long baudRate)
+    : serial(serialPort), header(headerByte), maxPacketSize(maxPacketSize), baudRate(baudRate) {}
 
 void UARTProtocol::begin() {
     serial.begin(baudRate);
@@ -20,8 +20,8 @@ bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t 
     DEBUG_PRINT("Sending packet with command type: ");
     DEBUG_PRINTLN(commandType, HEX);
 
-    if (parameterCount != parameterLookup(commandType) || (2 + parameterCount + 1) > maxPacketSize) {
-        DEBUG_PRINTLN("Error: Invalid parameter count or packet size exceeds max limit");
+    if ((2 + parameterCount + 1) > maxPacketSize) {
+        DEBUG_PRINTLN("Error: Packet size exceeds max limit");
         return false;
     }
 
@@ -45,13 +45,8 @@ bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t 
     return true;
 }
 
-bool UARTProtocol::receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t& parameterCount, bool checkChecksum) {
+bool UARTProtocol::receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum) {
     DEBUG_PRINTLN("Waiting for packet...");
-
-    if (serial.available() < 3) {
-        DEBUG_PRINTLN("Error: Not enough data available for a valid packet");
-        return false;
-    }
 
     while (serial.read() != header) {
         if (serial.available() < 1) {
@@ -65,10 +60,6 @@ bool UARTProtocol::receivePacket(uint8_t& commandType, uint8_t* parameters, uint
     commandType = serial.read();
     DEBUG_PRINT("Command type: ");
     DEBUG_PRINTLN(commandType, HEX);
-
-    parameterCount = parameterLookup(commandType);
-    DEBUG_PRINT("Expected parameter count: ");
-    DEBUG_PRINTLN(parameterCount);
 
     if (parameterCount + 3 > maxPacketSize || serial.available() < parameterCount + (checkChecksum ? 1 : 0)) {
         DEBUG_PRINTLN("Error: Invalid packet size or not enough data");
@@ -128,4 +119,8 @@ bool UARTProtocol::waitForHeader(unsigned long timeout) {
 
     DEBUG_PRINTLN("Timeout: Header byte not found.");
     return false;  // Timeout reached
+}
+
+bool UARTProtocol::available() {
+    return serial.available();
 }

@@ -1,0 +1,14 @@
+{
+    "name": "UART_Protocol",
+    "version": "1.0.0",
+    "description": "A custom UART protocol for communication between two devices",
+    "keywords": ["example", "shared"],
+    "authors": [
+      {
+        "name": "Tarun Tom",
+        "email": "taruntom1@gmail.com"
+      }
+    ],
+    "license": "MIT"
+  }
+  
