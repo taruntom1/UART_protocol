@@ -45,6 +45,36 @@ bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t 
     return true;
 }
 
+bool UARTProtocol::ReadCommand(uint8_t& commandType) {
+    DEBUG_PRINTLN("Waiting for packet...");
+    while (serial.read() != header) {
+        if (serial.available() < 1) {
+            DEBUG_PRINTLN("Error: No valid header found");
+            return false;
+        }
+    }
+    DEBUG_PRINTLN("Header found");
+    commandType = serial.read();
+    DEBUG_PRINT("Command type: ");
+    DEBUG_PRINTLN(commandType, HEX);
+    return true;
+}
+
+bool UARTProtocol::ReadData(byte* data, uint8_t length, int timeout) 
+{
+    DEBUG_PRINTLN("Waiting for parameter..."); 
+    if (serial.readBytes(data, length) < length){
+        DEBUG_PRINTLN("Error: data length not enough");
+    }
+    DEBUG_PRINTLN("Parameter received");
+    return true;
+}
+
+
+
+
+
+
 bool UARTProtocol::receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum) {
     DEBUG_PRINTLN("Waiting for packet...");
 
