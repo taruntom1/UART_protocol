@@ -21,7 +21,7 @@ private:
     unsigned long baudRate;
     HardwareSerial& serial;
 
-    uint8_t calculateChecksum(uint8_t* packet, uint8_t length);
+    byte calculateChecksum(uint8_t commandType, byte* data, uint8_t length); // length = length of data
 
 public:
     UARTProtocol(HardwareSerial& serialPort, uint8_t headerByte, uint8_t maxPacketSize, unsigned long baudRate);
@@ -29,8 +29,10 @@ public:
     bool sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum = true);
     void SendCommand(uint8_t commandType);
     void SendData(byte* data, uint8_t length);
+    void SendChecksum(uint8_t commandType, byte* data, uint8_t length);
     bool ReadCommand(uint8_t& commandType);
     bool ReadData(byte* data, uint8_t length, int timeout);
+    bool VerifyChecksum(uint8_t& commandType, byte* data, uint8_t length);
     bool receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum = true);
     bool waitForHeader(unsigned long timeout);
     bool available();
