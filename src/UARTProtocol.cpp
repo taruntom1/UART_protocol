@@ -83,22 +83,17 @@ void UARTProtocol::SendChecksum(uint8_t commandType, byte *data, uint8_t length)
 bool UARTProtocol::ReadCommand(uint8_t &commandType)
 {
     DEBUG_PRINTLN("Waiting for packet...");
-    /* while (serial.read() != header)
-    {
-        if (serial.available() < 1)
-        {
-            DEBUG_PRINTLN("Error: No valid header found");
-            return false;
-        }
-    } */
-
     if (serial.find(header))
     {
         DEBUG_PRINTLN("Header found");
-        commandType = serial.read();
-        DEBUG_PRINT("Command type: ");
-        DEBUG_PRINTLN(commandType, HEX);
-        return true;
+        if (serial.readBytes(&commandType, 1))
+        {
+            DEBUG_PRINT("Command type: ");
+            DEBUG_PRINTLN(commandType, HEX);
+            return true;
+        }
+        DEBUG_PRINTLN("Error: Command type not received");
+        return false;
     }
 
     DEBUG_PRINTLN("Error: No valid header found");
@@ -119,12 +114,12 @@ bool UARTProtocol::ReadData(byte *data, uint8_t length, int timeout)
 
 bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t dataLength)
 {
-    byte recievedChecksum[1];
+    byte recievedChecksum;
     DEBUG_PRINTLN("Waiting for checksum...");
-    if (serial.readBytes(recievedChecksum, 1) == 1)
+    if (serial.readBytes(&recievedChecksum, 1) == 1)
     {
         DEBUG_PRINTLN("Checksum received: ");
-        DEBUG_PRINTLN(recievedChecksum[0], HEX);
+        DEBUG_PRINTLN(recievedChecksum, HEX);
     }
     else
     {
@@ -136,7 +131,7 @@ bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t data
     calculatedChecksum = calculateChecksum(commandType, data, dataLength);
     DEBUG_PRINTLN("Calculated checksum: ");
     DEBUG_PRINTLN(calculatedChecksum, HEX);
-    if (recievedChecksum[0] == calculatedChecksum)
+    if (recievedChecksum == calculatedChecksum)
     {
         DEBUG_PRINTLN("Checksum verified");
         return true;
