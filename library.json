@@ -1,6 +1,6 @@
 {
     "name": "UART_Protocol",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "A custom UART protocol for communication between two devices",
     "keywords": ["example", "shared"],
     "authors": [
