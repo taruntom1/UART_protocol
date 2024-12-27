@@ -117,12 +117,35 @@ bool UARTProtocol::ReadData(byte *data, uint8_t length, int timeout)
     return true;
 }
 
-bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t length)
+bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t dataLength)
 {
     byte recievedChecksum[1];
-    serial.readBytes(recievedChecksum, 1);
+    DEBUG_PRINTLN("Waiting for checksum...");
+    if (serial.readBytes(recievedChecksum, 1) == 1)
+    {
+        DEBUG_PRINTLN("Checksum received: ");
+        DEBUG_PRINTLN(recievedChecksum[0], HEX);
+    }
+    else
+    {
+        DEBUG_PRINTLN("Error: checksum not received");
+        return false;
+    }
+
     byte calculatedChecksum;
-    calculatedChecksum = calculateChecksum(commandType, data, length);
+    calculatedChecksum = calculateChecksum(commandType, data, dataLength);
+    DEBUG_PRINTLN("Calculated checksum: ");
+    DEBUG_PRINTLN(calculatedChecksum, HEX);
+    if (recievedChecksum[0] == calculatedChecksum)
+    {
+        DEBUG_PRINTLN("Checksum verified");
+        return true;
+    }
+    else
+    {
+        DEBUG_PRINTLN("Checksum verification failed");
+        return false;
+    }
 }
 
 /* bool UARTProtocol::receivePacket(uint8_t &commandType, uint8_t *parameters, uint8_t parameterCount, bool checkChecksum)
