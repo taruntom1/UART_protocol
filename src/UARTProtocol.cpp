@@ -45,6 +45,26 @@ bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t 
     return true;
 }
 
+void UARTProtocol::SendCommand(uint8_t commandType)
+{
+    DEBUG_PRINT("Sending packet with command type: ");
+    DEBUG_PRINTLN(commandType, HEX);
+    serial.write(header);
+    serial.write(commandType);
+    DEBUG_PRINT("Packet sent");
+}
+
+void UARTProtocol::SendData(byte* data, uint8_t length)
+{
+    DEBUG_PRINT("Sending data: ");
+    for (int i = 0; i < length; i++)
+    {
+        serial.write(data[i]);
+        DEBUG_PRINT(data[i], HEX);
+    }
+    DEBUG_PRINTLN("Data sent");
+}
+
 bool UARTProtocol::ReadCommand(uint8_t& commandType) {
     DEBUG_PRINTLN("Waiting for packet...");
     while (serial.read() != header) {
