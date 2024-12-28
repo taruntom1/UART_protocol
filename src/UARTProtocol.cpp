@@ -19,39 +19,6 @@ byte UARTProtocol::calculateChecksum(uint8_t commandType, byte *data, uint8_t le
     return checksum;
 }
 
-/* bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t *parameters, uint8_t parameterCount, bool checkChecksum)
-{
-    DEBUG_PRINT("Sending packet with command type: ");
-    DEBUG_PRINTLN(commandType, HEX);
-
-    if ((2 + parameterCount + 1) > maxPacketSize)
-    {
-        DEBUG_PRINTLN("Error: Packet size exceeds max limit");
-        return false;
-    }
-
-    uint8_t packet[maxPacketSize];
-    packet[0] = header;
-    packet[1] = commandType;
-
-    for (uint8_t i = 0; i < parameterCount; i++)
-    {
-        packet[2 + i] = parameters[i];
-    }
-
-    if (checkChecksum)
-    {
-        uint8_t checksum = calculateChecksum(packet, 2 + parameterCount);
-        packet[2 + parameterCount] = checksum;
-        DEBUG_PRINT("Calculated checksum: ");
-        DEBUG_PRINTLN(checksum, HEX);
-    }
-
-    serial.write(packet, 2 + parameterCount + (checkChecksum ? 1 : 0));
-    DEBUG_PRINTLN("Packet sent");
-    return true;
-} */
-
 void UARTProtocol::SendCommand(uint8_t commandType)
 {
     DEBUG_PRINT("Sending packet with command type: ");
@@ -64,11 +31,7 @@ void UARTProtocol::SendCommand(uint8_t commandType)
 void UARTProtocol::SendData(byte *data, uint8_t length)
 {
     DEBUG_PRINT("Sending data: ");
-    for (int i = 0; i < length; i++)
-    {
-        serial.write(data[i]);
-        DEBUG_PRINT(data[i], HEX);
-    }
+    serial.write(data, length);
     DEBUG_PRINTLN("Data sent");
 }
 
@@ -142,6 +105,38 @@ bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t data
         return false;
     }
 }
+bool UARTProtocol::waitForHeader(unsigned long timeout)
+{
+    DEBUG_PRINTLN("Waiting for header with timeout...");
+
+    unsigned long startTime = millis(); // Record the start time
+
+    while (millis() - startTime < timeout)
+    { // Check if timeout has been reached
+        if (serial.available() > 0)
+        {                                 // Data available in the buffer
+            int nextByte = serial.peek(); // Peek at the next byte without removing it
+            if (nextByte == header)
+            { // Check if the byte matches the header
+                DEBUG_PRINTLN("Header byte found!");
+                return true; // Exit without clearing the header byte
+            }
+            else
+            {
+                serial.read(); // Consume non-header byte
+            }
+        }
+    }
+
+    DEBUG_PRINTLN("Timeout: Header byte not found.");
+    return false; // Timeout reached
+}
+
+// Check if there is data available to read
+bool UARTProtocol::available()
+{
+    return serial.available();
+}
 
 /* bool UARTProtocol::receivePacket(uint8_t &commandType, uint8_t *parameters, uint8_t parameterCount, bool checkChecksum)
 {
@@ -205,35 +200,35 @@ bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t data
     return true;
 } */
 
-bool UARTProtocol::waitForHeader(unsigned long timeout)
+/* bool UARTProtocol::sendPacket(uint8_t commandType, uint8_t *parameters, uint8_t parameterCount, bool checkChecksum)
 {
-    DEBUG_PRINTLN("Waiting for header with timeout...");
+    DEBUG_PRINT("Sending packet with command type: ");
+    DEBUG_PRINTLN(commandType, HEX);
 
-    unsigned long startTime = millis(); // Record the start time
-
-    while (millis() - startTime < timeout)
-    { // Check if timeout has been reached
-        if (serial.available() > 0)
-        {                                 // Data available in the buffer
-            int nextByte = serial.peek(); // Peek at the next byte without removing it
-            if (nextByte == header)
-            { // Check if the byte matches the header
-                DEBUG_PRINTLN("Header byte found!");
-                return true; // Exit without clearing the header byte
-            }
-            else
-            {
-                serial.read(); // Consume non-header byte
-            }
-        }
+    if ((2 + parameterCount + 1) > maxPacketSize)
+    {
+        DEBUG_PRINTLN("Error: Packet size exceeds max limit");
+        return false;
     }
 
-    DEBUG_PRINTLN("Timeout: Header byte not found.");
-    return false; // Timeout reached
-}
+    uint8_t packet[maxPacketSize];
+    packet[0] = header;
+    packet[1] = commandType;
 
-// Check if there is data available to read
-bool UARTProtocol::available()
-{
-    return serial.available();
-}
+    for (uint8_t i = 0; i < parameterCount; i++)
+    {
+        packet[2 + i] = parameters[i];
+    }
+
+    if (checkChecksum)
+    {
+        uint8_t checksum = calculateChecksum(packet, 2 + parameterCount);
+        packet[2 + parameterCount] = checksum;
+        DEBUG_PRINT("Calculated checksum: ");
+        DEBUG_PRINTLN(checksum, HEX);
+    }
+
+    serial.write(packet, 2 + parameterCount + (checkChecksum ? 1 : 0));
+    DEBUG_PRINTLN("Packet sent");
+    return true;
+} */
