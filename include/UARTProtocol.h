@@ -7,11 +7,11 @@
 #define PROTOCOL_DEBUG_LOGS 0
 
 #if PROTOCOL_DEBUG_LOGS
-#define DEBUG_PRINT(...) do { Serial.print(__VA_ARGS__); } while (0)
-#define DEBUG_PRINTLN(...) do { Serial.println(__VA_ARGS__); } while (0)
+#define PROTOCOL_DEBUG_PRINT(...) do { Serial.print(__VA_ARGS__); } while (0)
+#define PROTOCOL_DEBUG_PRINTLN(...) do { Serial.println(__VA_ARGS__); } while (0)
 #else
-#define DEBUG_PRINT(...)
-#define DEBUG_PRINTLN(...)
+#define PROTOCOL_DEBUG_PRINT(...)
+#define PROTOCOL_DEBUG_PRINTLN(...)
 #endif
 
 class UARTProtocol {
