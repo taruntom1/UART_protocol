@@ -81,6 +81,18 @@ bool UARTProtocol::ReadData(byte *data, uint8_t length, int timeout)
     return true;
 }
 
+bool UARTProtocol::ReadData(byte *data, uint8_t length)
+{
+    DEBUG_PRINTLN("Waiting for parameter...");
+    if (serial.readBytes(data, length) < length)
+    {
+        DEBUG_PRINTLN("Error: data length not enough");
+        return false;
+    }
+    DEBUG_PRINTLN("Parameter received");
+    return true;
+}
+
 bool UARTProtocol::VerifyChecksum(uint8_t &commandType, byte *data, uint8_t dataLength)
 {
     byte recievedChecksum;

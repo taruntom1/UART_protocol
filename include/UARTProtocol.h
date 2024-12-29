@@ -32,6 +32,7 @@ public:
     void SendChecksum(uint8_t commandType, byte* data, uint8_t length);
     bool ReadCommand(uint8_t& commandType);
     bool ReadData(byte* data, uint8_t length, int timeout);
+    bool ReadData(byte* data, uint8_t length);
     bool VerifyChecksum(uint8_t& commandType, byte* data, uint8_t length);
     bool receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum = true);
     bool waitForHeader(unsigned long timeout);
