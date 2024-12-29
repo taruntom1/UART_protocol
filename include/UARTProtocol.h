@@ -2,7 +2,7 @@
 #define UARTPROTOCOL_H
 
 #include <Arduino.h>
-
+#define PROTOCOL_DEBUG_LOGS 0
 // Enable or disable debugging
 
 #if PROTOCOL_DEBUG_LOGS

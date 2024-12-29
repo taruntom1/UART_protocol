@@ -127,19 +127,30 @@ bool UARTProtocol::waitForHeader(unsigned long timeout)
 {
     PROTOCOL_DEBUG_PRINTLN("Waiting for header with timeout...");
 
-    serial.setTimeout(timeout);
-    if (serial.find(header))
-    {
-        PROTOCOL_DEBUG_PRINTLN("WaitforHeader: Header byte found!");
-        serial.setTimeout(1000);
-        return true;
+    unsigned long startTime = millis(); // Record the start time
+
+    while (millis() - startTime < timeout)
+    { // Check if timeout has been reached
+        serial.setTimeout(1);
+        if (serial.available() > 0)
+        {                                 // Data available in the buffer
+            int nextByte = serial.peek(); // Peek at the next byte without removing it
+            if (nextByte == header)
+            { // Check if the byte matches the header
+                PROTOCOL_DEBUG_PRINTLN("Header byte found!");
+                serial.setTimeout(1000);
+                return true; // Exit without clearing the header byte
+            }
+            else
+            {
+                serial.read(); // Consume non-header byte
+            }
+        }
     }
-    else
-    {
-        PROTOCOL_DEBUG_PRINTLN("WaitforHeader: Header byte not found. ");
-        serial.setTimeout(1000);
-        return false;
-    }
+
+    PROTOCOL_DEBUG_PRINTLN("Timeout: Header byte not found.");
+    serial.setTimeout(1000);
+    return false; // Timeout reached
 }
 
 // Check if there is data available to read
