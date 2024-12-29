@@ -46,8 +46,10 @@ void UARTProtocol::SendChecksum(uint8_t commandType, byte *data, uint8_t length)
 bool UARTProtocol::ReadCommand(uint8_t &commandType)
 {
     DEBUG_PRINTLN("Waiting for packet...");
+    serial.setTimeout(1);
     if (serial.find(header))
     {
+        serial.setTimeout(1000);
         DEBUG_PRINTLN("Header found");
         if (serial.readBytes(&commandType, 1))
         {
@@ -59,6 +61,7 @@ bool UARTProtocol::ReadCommand(uint8_t &commandType)
         return false;
     }
 
+    serial.setTimeout(1000);
     DEBUG_PRINTLN("Error: No valid header found");
     return false;
 }
