@@ -69,12 +69,15 @@ bool UARTProtocol::ReadCommand(uint8_t &commandType)
 bool UARTProtocol::ReadData(byte *data, uint8_t length, int timeout)
 {
     DEBUG_PRINTLN("Waiting for parameter...");
+    serial.setTimeout(timeout);
     if (serial.readBytes(data, length) < length)
     {
         DEBUG_PRINTLN("Error: data length not enough");
+        serial.setTimeout(1000);
         return false;
     }
     DEBUG_PRINTLN("Parameter received");
+    serial.setTimeout(1000);
     return true;
 }
 
