@@ -25,10 +25,9 @@ public:
     void begin();
     void SendCommand(uint8_t commandType);
     void SendData(byte* data, uint8_t length);
-    bool ReadCommand(uint8_t& commandType);
+    bool ReadCommand(uint8_t& commandType, uint32_t timeoutMs = 1000);
     bool ReadData(byte* data, uint8_t length, int timeout);
     bool ReadData(byte* data, uint8_t length);
-    bool waitForHeader(unsigned long timeout);
     bool available();
 };
 

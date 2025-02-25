@@ -25,27 +25,42 @@ void UARTProtocol::SendData(byte *data, uint8_t length)
     PROTOCOL_DEBUG_PRINTLN("Data sent");
 }
 
-bool UARTProtocol::ReadCommand(uint8_t &commandType)
+bool UARTProtocol::ReadCommand(uint8_t &commandType, uint32_t timeoutMs)
 {
-    PROTOCOL_DEBUG_PRINTLN("Waiting for packet...");
-    serial.setTimeout(1);
-    if (serial.find(header))
-    {
-        serial.setTimeout(1000);
-        PROTOCOL_DEBUG_PRINTLN("Header found");
-        if (serial.readBytes(&commandType, 1))
-        {
-            PROTOCOL_DEBUG_PRINT("Command type: ");
-            PROTOCOL_DEBUG_PRINTLN(commandType, HEX);
-            return true;
+    PROTOCOL_DEBUG_PRINTLN("Waiting for header with timeout...");
+
+    unsigned long startTime = millis(); // Record the start time
+
+    while (millis() - startTime < timeoutMs)
+    { // Check if timeout has been reached
+        serial.setTimeout(1);
+        if (serial.available() > 0)
+        {                                 // Data available in the buffer
+            int nextByte = serial.peek(); // Peek at the next byte without removing it
+            if (nextByte == header)
+            { // Check if the byte matches the header
+                PROTOCOL_DEBUG_PRINTLN("Header byte found!");
+                serial.read(); // Consume header byte
+                serial.setTimeout(1000);
+                if (serial.readBytes(&commandType, 1))
+                {
+                    PROTOCOL_DEBUG_PRINT("Command type: ");
+                    PROTOCOL_DEBUG_PRINTLN(commandType, HEX);
+                    return true;
+                }
+                PROTOCOL_DEBUG_PRINTLN("Error: Command type not received");
+                return false;
+            }
+            else
+            {
+                serial.read(); // Consume non-header byte
+            }
         }
-        PROTOCOL_DEBUG_PRINTLN("Error: Command type not received");
-        return false;
     }
 
+    PROTOCOL_DEBUG_PRINTLN("Timeout: Header byte not found.");
     serial.setTimeout(1000);
-    PROTOCOL_DEBUG_PRINTLN("Error: No valid header found");
-    return false;
+    return false; // Timeout reached
 }
 
 bool UARTProtocol::ReadData(byte *data, uint8_t length, int timeout)
@@ -73,36 +88,6 @@ bool UARTProtocol::ReadData(byte *data, uint8_t length)
     }
     PROTOCOL_DEBUG_PRINTLN("Parameter received");
     return true;
-}
-
-bool UARTProtocol::waitForHeader(unsigned long timeout)
-{
-    PROTOCOL_DEBUG_PRINTLN("Waiting for header with timeout...");
-
-    unsigned long startTime = millis(); // Record the start time
-
-    while (millis() - startTime < timeout)
-    { // Check if timeout has been reached
-        serial.setTimeout(1);
-        if (serial.available() > 0)
-        {                                 // Data available in the buffer
-            int nextByte = serial.peek(); // Peek at the next byte without removing it
-            if (nextByte == header)
-            { // Check if the byte matches the header
-                PROTOCOL_DEBUG_PRINTLN("Header byte found!");
-                serial.setTimeout(1000);
-                return true; // Exit without clearing the header byte
-            }
-            else
-            {
-                serial.read(); // Consume non-header byte
-            }
-        }
-    }
-
-    PROTOCOL_DEBUG_PRINTLN("Timeout: Header byte not found.");
-    serial.setTimeout(1000);
-    return false; // Timeout reached
 }
 
 // Check if there is data available to read
