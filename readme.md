@@ -1,172 +1,85 @@
-# Documentation for Using the Custom UART Protocol Class
+# UARTProtocol Library
 
-## Overview
-This custom UART protocol class facilitates structured communication between two devices, such as Arduinos, over a UART interface. It supports sending and receiving packets with a fixed format and provides logging for debugging, which can be enabled or disabled at compile time.
-
-The packet format is:
-
-```
-[Header][Command Type][Parameter 1][Parameter 2]...[Parameter n][Checksum (optional)]
-```
-
-The number of parameters is determined dynamically based on a command lookup table provided during class initialization.
-
----
+A lightweight Arduino library for handling UART communication with a structured protocol. This library allows sending and receiving commands and data using a header-based protocol with a configurable baud rate.
 
 ## Features
-1. **Dynamic Parameter Count:** Uses a lookup table to determine the number of parameters for a given command type.
-2. **Checksum Validation:** Optionally calculate and verify a checksum for data integrity.
-3. **Debug Logging:** Provides detailed logs for debugging, which can be enabled or disabled using the `DEBUG_LOGS` macro.
-4. **Error Handling:** Ensures proper packet formatting and size validation.
-5. **Header Synchronization:** Reads until the header byte is found to ensure proper packet alignment.
+- Send and receive commands with a header byte
+- Send and receive data with configurable packet sizes
+- Timeout handling for reading commands and data
+- Debug logging (configurable)
 
----
+## Installation
+Copy the `UARTProtocol.h` and `UARTProtocol.cpp` files into your Arduino project and include them in your sketch.
 
-## Class Constructor
-### Syntax
+## Usage
+
+### 1. Include the Library
 ```cpp
-UARTProtocol(HardwareSerial& serialPort, uint8_t headerByte, uint8_t maxPacketSize, unsigned long baudRate, uint8_t (*lookupTable)(uint8_t));
+#include "UARTProtocol.h"
 ```
 
-### Parameters
-- **serialPort:** Reference to a hardware serial port (e.g., `Serial1`).
-- **headerByte:** The header byte that marks the start of a packet.
-- **maxPacketSize:** Maximum allowable packet size.
-- **baudRate:** UART baud rate.
-- **lookupTable:** Function pointer to a lookup table that returns the expected number of parameters for a given command type.
-
----
-
-## Initialization
-### Syntax
+### 2. Create an Instance
 ```cpp
-void begin();
-```
-### Description
-Initializes the serial port with the specified baud rate and logs initialization status if debugging is enabled.
-
----
-
-## Sending Packets
-### Syntax
-```cpp
-bool sendPacket(uint8_t commandType, uint8_t* parameters, uint8_t parameterCount, bool checkChecksum = true);
+HardwareSerial &serialPort = Serial1; // Use Serial1 or any available UART port
+UARTProtocol uart(serialPort, 0xAA, 64, 115200);
 ```
 
-### Parameters
-- **commandType:** The command type byte.
-- **parameters:** Pointer to an array of parameter bytes.
-- **parameterCount:** Number of parameters in the array.
-- **checkChecksum (optional):** If `true`, appends a checksum to the packet.
-
-### Returns
-- **`true`:** Packet sent successfully.
-- **`false`:** Invalid parameters or packet size exceeds the limit.
-
-### Example
+### 3. Initialize the Protocol
 ```cpp
-uint8_t parameters[] = {0x10, 0x20};
-protocol.sendPacket(0x01, parameters, 2);
-```
-
----
-
-## Receiving Packets
-### Syntax
-```cpp
-bool receivePacket(uint8_t& commandType, uint8_t* parameters, uint8_t& parameterCount, bool checkChecksum = true);
-```
-
-### Parameters
-- **commandType:** Reference to store the received command type.
-- **parameters:** Pointer to an array to store the received parameters.
-- **parameterCount:** Reference to store the number of received parameters.
-- **checkChecksum (optional):** If `true`, verifies the checksum.
-
-### Returns
-- **`true`:** Packet received successfully.
-- **`false`:** Error in packet reception (e.g., checksum mismatch, invalid size).
-
-### Example
-```cpp
-uint8_t commandType;
-uint8_t parameters[5];
-uint8_t parameterCount;
-
-if (protocol.receivePacket(commandType, parameters, parameterCount)) {
-    Serial.println("Packet received successfully!");
-} else {
-    Serial.println("Error receiving packet.");
-}
-```
-
----
-
-## Debug Logging
-### Enabling/Disabling Logs
-To enable or disable debugging logs, modify the `DEBUG_LOGS` macro at the top of the code:
-
-```cpp
-#define DEBUG_LOGS 1 // Enable logs
-// or
-#define DEBUG_LOGS 0 // Disable logs
-```
-
-### Debugging Statements
-When enabled, logs provide insights into:
-- Initialization
-- Packet composition and checksum calculations
-- Errors during packet transmission or reception
-
----
-
-## Example Usage
-### Complete Example
-```cpp
-#include <Arduino.h>
-
-// Example parameter lookup table
-uint8_t exampleLookupTable(uint8_t commandType) {
-    switch (commandType) {
-        case 0x01: return 2; // Command type 0x01 expects 2 parameters
-        case 0x02: return 3; // Command type 0x02 expects 3 parameters
-        case 0x03: return 1; // Command type 0x03 expects 1 parameter
-        default: return 0; // Unknown command type
-    }
-}
-
-// Initialize protocol instance
-UARTProtocol protocol(Serial1, 0xAA, 10, 9600, exampleLookupTable);
-
 void setup() {
-    Serial.begin(9600);
-    protocol.begin();
-
-    // Example: Sending a packet
-    uint8_t parameters[] = {0x10, 0x20};
-    if (!protocol.sendPacket(0x01, parameters, 2)) {
-        Serial.println("Failed to send packet");
-    }
-}
-
-void loop() {
-    // Example: Receiving a packet
-    uint8_t commandType;
-    uint8_t parameters[5];
-    uint8_t parameterCount;
-
-    if (protocol.receivePacket(commandType, parameters, parameterCount)) {
-        Serial.println("Packet received successfully!");
-    }
+    Serial.begin(115200); // Debugging output
+    uart.begin();
 }
 ```
 
----
+### 4. Sending Commands
+```cpp
+uint8_t command = 0x01;
+uart.SendCommand(command);
+```
 
-## Notes
-1. Ensure the header byte matches on both sender and receiver.
-2. The `maxPacketSize` should accommodate the header, command type, parameters, and optional checksum.
-3. Adjust the `parameterLookup` function to handle your specific command types and expected parameters.
+### 5. Sending Data
+```cpp
+byte data[] = {0x10, 0x20, 0x30};
+uart.SendData(data, sizeof(data));
+```
 
-This document outlines the class's design and its usage, helping you implement robust UART communication in your projects.
+### 6. Receiving Commands
+```cpp
+uint8_t receivedCommand;
+if (uart.ReadCommand(receivedCommand)) {
+    Serial.print("Received command: ");
+    Serial.println(receivedCommand, HEX);
+}
+```
+
+### 7. Receiving Data
+```cpp
+byte receivedData[3];
+if (uart.ReadData(receivedData, 3)) {
+    Serial.println("Received Data: ");
+    for (int i = 0; i < 3; i++) {
+        Serial.print(receivedData[i], HEX);
+        Serial.print(" ");
+    }
+    Serial.println();
+}
+```
+
+### 8. Checking for Available Data
+```cpp
+if (uart.available()) {
+    Serial.println("Data available in buffer");
+}
+```
+
+## Debugging
+Enable debugging by setting `PROTOCOL_DEBUG_LOGS` to `1` in `UARTProtocol.h`:
+```cpp
+#define PROTOCOL_DEBUG_LOGS 1
+```
+This will print debug logs to the serial monitor.
+
+## License
+This library is open-source and free to use under the MIT License.
 
